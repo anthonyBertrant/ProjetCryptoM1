@@ -3,7 +3,7 @@ import java.util.Random;
 
 /**
  * Created by anthonybertrant on 06/11/2017.
- * Description:
+ * Description: Classe du chiffrement AES
  */
 public class AES {
 
