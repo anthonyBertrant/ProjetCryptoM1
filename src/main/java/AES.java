@@ -65,7 +65,7 @@ public class AES {
             (byte) 0x17, (byte) 0x2B, (byte) 0x04, (byte) 0x7E, (byte) 0xBA, (byte) 0x77, (byte) 0xD6, (byte) 0x26, (byte) 0xE1, (byte) 0x69, (byte) 0x14, (byte) 0x63, (byte) 0x55, (byte) 0x21, (byte) 0x0C, (byte) 0x7D
     };
 
-    private void encryption(){
+    public void encryption(){
         int round;
         addRoundKey(0);
         for (round = 1; round < Nr; ++round) {
@@ -79,7 +79,7 @@ public class AES {
         addRoundKey(Nr);
     }
 
-    private void decryption(){
+    public void decryption(){
         int round;
         addRoundKey(Nr);
         for (round = (Nr - 1); round > 0; --round) {
@@ -154,6 +154,60 @@ public class AES {
         }
     }
 
+    public void cbcEncrypt(FileInputStream fis, String fileName, byte[] key){
+        //Fonction pour dechiffrement avec une clé
+        //state = key;
+
+        try{
+
+            FileInputStream fichierBourrer = bourrage(fis);
+            FileOutputStream fos = new FileOutputStream(new File(fileName));
+
+            randomIV();
+            writer(fos, IV);
+
+            int actualByte;
+            for(int index = 0; index < 16; ++index){
+                blocsRead[index] = (byte)fichierBourrer.read();
+            }
+
+            for(int index = 0; index < 16; ++index)
+                state[index] = (byte) (IV[index] ^ blocsRead[index]);
+
+            encryption();
+
+            writer(fos, state);
+
+            System.arraycopy(state, 0, IV, 0, state.length);
+
+
+            int index = 0;
+            int loop = 1;
+
+            while ((actualByte = fichierBourrer.read()) != -1){
+
+                if(index == 16) {
+
+                    encryption();
+
+                    System.arraycopy(state, 0, IV, 0, state.length);
+
+                    writer(fos, state);
+                    System.out.println("bloc n°" + loop + " traité");
+                    ++loop;
+                    index = 0;
+                }
+                blocsRead[index] = (byte)actualByte;
+                state[index] = (byte)(IV[index] ^ blocsRead[index]);
+
+                ++index;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static String toHex(byte[] donnees) {
         return "0x" + javax.xml.bind.DatatypeConverter.printHexBinary(donnees);
     }
@@ -162,6 +216,59 @@ public class AES {
         try{
 
             FileOutputStream fos = new FileOutputStream(new File(fileName));
+
+            setIvFromEncrypt(fis);
+
+            int actualByte;
+            for(int i = 0; i < 16; ++i){
+                blocsCrypt[i] = (byte)fis.read();
+                state[i] = blocsCrypt[i];
+            }
+
+            decryption();
+
+            for(int index = 0; index < 16; ++index)
+                state[index] = (byte) (IV[index] ^ state[index]);
+
+            writer(fos, state); //Bloc totalement déchiffer et clair
+
+            System.arraycopy(blocsCrypt, 0, IV, 0, blocsCrypt.length); //IV est le bloc chiffré, précedent lu
+
+            int index = 0;
+            int loop = 1;
+            while ((actualByte = fis.read()) != -1){
+
+                if(index == 16){
+
+                    decryption();
+
+                    for (int i = 0; i < 16; ++i)
+                        state[i] = (byte)(IV[i] ^ state[i]);
+
+                    writer(fos, state);
+                    System.out.println("bloc n°" + loop + " traité");
+                    ++loop;
+
+                    System.arraycopy(blocsCrypt, 0, IV, 0, blocsCrypt.length);
+                    index = 0;
+                }
+                blocsCrypt[index] = (byte)actualByte;
+                state[index] = blocsCrypt[index];
+                ++index;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void cbcDecrypt(FileInputStream fis, String fileName, byte[] key){
+        try{
+
+            FileOutputStream fos = new FileOutputStream(new File(fileName));
+
+            //Fonction pour dechiffrement avec une clé
+            //state = key;
 
             setIvFromEncrypt(fis);
 
@@ -399,6 +506,10 @@ public class AES {
         }
 
         return null;
+    }
+
+    public byte[] getState(){
+        return state;
     }
 
 }
