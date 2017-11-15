@@ -8,6 +8,8 @@ import java.io.IOException;
  */
 public class run {
 
+    private static byte[] NULL_KEY = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
     public static void main(String[] args) {
 
         if(args.length == 0){
@@ -55,7 +57,7 @@ public class run {
                         FileInputStream fis = new FileInputStream(new File(args[1]));
                         String cible = "aes-" + args[1];
                         System.out.println("Chiffrement de " + args[1] + " en " + cible);
-                        aesCipher.cbcEncrypt(fis, cible);
+                        aesCipher.cbcEncrypt(fis, cible, NULL_KEY);
 
                         fis.close();
 
@@ -70,7 +72,7 @@ public class run {
                     try {
                         FileInputStream fisCrypted = new FileInputStream(new File(args[1]));
                         String cible = "aes-" + args[1];
-                        aesCipher.cbcDecrypt(fisCrypted, cible);
+                        aesCipher.cbcDecrypt(fisCrypted, cible, NULL_KEY);
                         fisCrypted.close();
 
                         System.out.println("Déchiffrement de " + args[1] + " en " + cible);
@@ -95,7 +97,7 @@ public class run {
                     try {
                         FileInputStream fis = new FileInputStream(new File(args[1]));
                         String cible = "aes-" + args[1];
-                        System.out.println("la clef utilisée est: " + toHex(key));
+                        System.out.println("La clef utilisée est: " + toHex(key));
                         System.out.println("Chiffrement de " + args[1] + " en " + cible);
                         aesCipher.cbcEncrypt(fis, cible, key);
 
@@ -119,7 +121,7 @@ public class run {
                         String cible = "aes-" + args[1];
                         aesCipher.cbcDecrypt(fisCrypted, cible, key);
                         fisCrypted.close();
-
+                        System.out.println("La clef utilisée est: " + toHex(key));
                         System.out.println("Déchiffrement de " + args[1] + " en " + cible);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -132,12 +134,6 @@ public class run {
                     System.exit(-1);
             }
         }
-
-        /*MD5 md5 = new MD5();
-        byte[] hash = md5.generateMD5("Alain Turin");
-
-        System.out.println("Le resumé vaut: 0x" + toHex(hash));
-        */
     }
 
     public static String toHex(byte[] donnees) {
