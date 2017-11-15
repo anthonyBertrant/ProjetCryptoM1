@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -96,6 +95,7 @@ public class run {
                     try {
                         FileInputStream fis = new FileInputStream(new File(args[1]));
                         String cible = "aes-" + args[1];
+                        System.out.println("la clef utilisée est: " + toHex(key));
                         System.out.println("Chiffrement de " + args[1] + " en " + cible);
                         aesCipher.cbcEncrypt(fis, cible, key);
 
@@ -110,10 +110,14 @@ public class run {
                 case "-d": {
 
                     AES aesCipher = new AES();
+
+                    MD5 md5 = new MD5();
+                    byte[] key = md5.generateMD5(args[2]);
+
                     try {
                         FileInputStream fisCrypted = new FileInputStream(new File(args[1]));
                         String cible = "aes-" + args[1];
-                        aesCipher.cbcDecrypt(fisCrypted, cible);
+                        aesCipher.cbcDecrypt(fisCrypted, cible, key);
                         fisCrypted.close();
 
                         System.out.println("Déchiffrement de " + args[1] + " en " + cible);
@@ -129,10 +133,11 @@ public class run {
             }
         }
 
-        MD5 md5 = new MD5();
+        /*MD5 md5 = new MD5();
         byte[] hash = md5.generateMD5("Alain Turin");
 
         System.out.println("Le resumé vaut: 0x" + toHex(hash));
+        */
     }
 
     public static String toHex(byte[] donnees) {

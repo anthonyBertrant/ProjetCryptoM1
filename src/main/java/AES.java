@@ -8,7 +8,8 @@ import java.util.Random;
 public class AES {
 
     private int keyLength = 16, Nr = 10, Nk = 4, wideKeyLength = 176;
-    private byte[] K = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private byte[] K = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //clé par defaut
+    private byte[] Rcon = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, (byte)0x80, 0x1B, 0x36};
     private byte[] W = {
             (byte) 0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
             (byte) 0x62, (byte)0x63, (byte)0x63, (byte)0x63, (byte)0x62, (byte)0x63, (byte)0x63, (byte)0x63, (byte)0x62, (byte)0x63, (byte)0x63, (byte)0x63, (byte)0x62, (byte)0x63, (byte)0x63, (byte)0x63,
@@ -21,7 +22,7 @@ public class AES {
             (byte) 0x0E, (byte)0xF9, (byte)0x03, (byte)0x33, (byte)0x3B, (byte)0xA9, (byte)0x61, (byte)0x38, (byte)0x97, (byte)0x06, (byte)0x0A, (byte)0x04, (byte)0x51, (byte)0x1D, (byte)0xFA, (byte)0x9F,
             (byte) 0xB1, (byte)0xD4, (byte)0xD8, (byte)0xE2, (byte)0x8A, (byte)0x7D, (byte)0xB9, (byte)0xDA, (byte)0x1D, (byte)0x7B, (byte)0xB3, (byte)0xDE, (byte)0x4C, (byte)0x66, (byte)0x49, (byte)0x41,
             (byte) 0xB4, (byte)0xEF, (byte)0x5B, (byte)0xCB, (byte)0x3E, (byte)0x92, (byte)0xE2, (byte)0x11, (byte)0x23, (byte)0xE9, (byte)0x51, (byte)0xCF, (byte)0x6F, (byte)0x8F, (byte)0x18, (byte)0x8E
-    };
+    }; //Expension de clé par defaut
 
     private byte[] resMatrix= new byte[16], blocsRead = new byte[16], blocsCrypt = new byte[16];
     private byte[] matrix = {0x02, 0x01, 0x01, 0x03 ,0x03, 0x02, 0x01, 0x01, 0x01, 0x03, 0x02, 0x01, 0x01, 0x01, 0x03, 0x02};
@@ -156,7 +157,8 @@ public class AES {
 
     public void cbcEncrypt(FileInputStream fis, String fileName, byte[] key){
         //Fonction pour dechiffrement avec une clé
-        //state = key;
+        K = key;        //On affecte la clé de chiffrement
+        keyExpansion(); //On appelle keyExpension pour etendre la clé K defini
 
         try{
 
@@ -164,6 +166,8 @@ public class AES {
             FileOutputStream fos = new FileOutputStream(new File(fileName));
 
             randomIV();
+
+            System.out.println("VI: " + toHex(IV));
             writer(fos, IV);
 
             int actualByte;
@@ -182,7 +186,6 @@ public class AES {
 
 
             int index = 0;
-            int loop = 1;
 
             while ((actualByte = fichierBourrer.read()) != -1){
 
@@ -193,8 +196,6 @@ public class AES {
                     System.arraycopy(state, 0, IV, 0, state.length);
 
                     writer(fos, state);
-                    System.out.println("bloc n°" + loop + " traité");
-                    ++loop;
                     index = 0;
                 }
                 blocsRead[index] = (byte)actualByte;
@@ -202,6 +203,8 @@ public class AES {
 
                 ++index;
             }
+            fichierBourrer.close();
+            fos.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -263,19 +266,21 @@ public class AES {
     }
 
     public void cbcDecrypt(FileInputStream fis, String fileName, byte[] key){
+
+        //Fonction pour dechiffrement avec une clé
+        K = key;        //On affecte la clé de chiffrement
+        keyExpansion(); //On appelle keyExpension pour etendre la clé K defini
+
         try{
 
             FileOutputStream fos = new FileOutputStream(new File(fileName));
 
-            //Fonction pour dechiffrement avec une clé
-            //state = key;
-
             setIvFromEncrypt(fis);
 
             int actualByte;
-            for(int i = 0; i < 16; ++i){
-                blocsCrypt[i] = (byte)fis.read();
-                state[i] = blocsCrypt[i];
+            for(int index = 0; index < 16; ++index){
+                blocsCrypt[index] = (byte)fis.read();
+                state[index] = blocsCrypt[index];
             }
 
             decryption();
@@ -486,7 +491,7 @@ public class AES {
         int k = 16; //Taille des blocs de l'AES
 
         try {
-            FileOutputStream fos = new FileOutputStream(new File("src/main/java/pkcs5-butokuden.jpg"));
+            FileOutputStream fos = new FileOutputStream(new File("./pkcs5-butokuden.jpg"));
 
             long l = fis.getChannel().size();
             long nbOctectToAdd = k - (l % k); //Nombre octect a ajouter pour bourrage
@@ -499,7 +504,7 @@ public class AES {
             for (int i = 0; i < nbOctectToAdd; ++i)
                 fos.write(valueToAdd);
 
-            return new FileInputStream(new File("src/main/java/pkcs5-butokuden.jpg"));
+            return new FileInputStream(new File("./pkcs5-butokuden.jpg"));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -510,6 +515,88 @@ public class AES {
 
     public byte[] getState(){
         return state;
+    }
+
+    public void test(){
+        keyExpansion();
+
+        System.out.println(toHex(W));
+    }
+
+    private byte[] rotWord(byte[] tmp){
+        byte[] res = new byte[tmp.length];
+
+        res[0] = tmp[1];
+        res[1] = tmp[2];
+        res[2] = tmp[3];
+        res[3] = tmp[0];
+
+        return res;
+    }
+
+    private byte[] subWord(byte[] tmp){
+        byte[] res = new byte[tmp.length];
+
+        if(tmp[0] < 0)
+            res[0] = sbox[tmp[0] + 256];
+        else
+            res[0] = sbox[tmp[0]];
+
+        if(tmp[1] < 0)
+            res[1] = sbox[tmp[1] + 256];
+        else
+            res[1] = sbox[tmp[1]];
+
+
+        if(tmp[2] < 0)
+            res[2] = sbox[tmp[2] + 256];
+
+        else
+            res[2] = sbox[tmp[2]];
+
+
+        if(tmp[3] < 0)
+            res[3] = sbox[tmp[3] + 256];
+        else
+            res[3] = sbox[tmp[3]];
+
+
+        return res;
+    }
+
+    private void keyExpansion(){
+        byte[] tmp = new byte[4];
+        byte[] w1 = new byte[256];
+
+        for(int i = 0; i < K.length; ++i)
+            w1[i] = K[i];
+
+
+        for(int i = Nk; i < (4*(Nr + 1) -1); ++i){
+
+            //Met dans tmp la colonne Nk - 1
+            for(int index = 0; index < 4; ++index)
+                tmp[index] = w1[i + index - 1];
+
+            if( (i % Nk) == 0){
+                tmp = rotWord(tmp);
+                tmp = subWord(tmp);
+
+                for (int index = 0; index < tmp.length; ++index)
+                    tmp[index] = gmul(tmp[index], Rcon[i/Nk-1]);
+
+            }else if( (Nk > 6) && ((i % Nk) == 4)){
+                tmp = subWord(tmp);
+            }
+
+            for(int index = 0; index < tmp.length; ++index)
+                tmp[index] = gmul(w1[index + (i - Nk)], tmp[index]);
+
+            for(int index = 0; index < tmp.length; ++index)
+                w1[(Nk + i) + index] = tmp[index];
+        }
+
+        W = w1;
     }
 
 }
