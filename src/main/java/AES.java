@@ -66,6 +66,9 @@ public class AES {
             (byte) 0x17, (byte) 0x2B, (byte) 0x04, (byte) 0x7E, (byte) 0xBA, (byte) 0x77, (byte) 0xD6, (byte) 0x26, (byte) 0xE1, (byte) 0x69, (byte) 0x14, (byte) 0x63, (byte) 0x55, (byte) 0x21, (byte) 0x0C, (byte) 0x7D
     };
 
+    /**
+     * Permet de chiffrer le bloc courrant
+     */
     public void encryption(){
         int round;
         addRoundKey(0);
@@ -80,6 +83,9 @@ public class AES {
         addRoundKey(Nr);
     }
 
+    /**
+     * Permet de dechiffrer le bloc courrant
+     */
     public void decryption(){
         int round;
         addRoundKey(Nr);
@@ -94,6 +100,11 @@ public class AES {
         addRoundKey(0);
     }
 
+    /**
+     * Permet d'écrire dans le fichier le bloc dans le fichier désigner
+     * @param fos fichier dans le lequel écrire
+     * @param blocToWrite bloc à écrire
+     */
     private void writer(FileOutputStream fos, byte[] blocToWrite){
         for (int index = 0; index < blocToWrite.length; ++index) {
             try {
@@ -104,6 +115,12 @@ public class AES {
         }
     }
 
+    /**
+     * Permet de chiffer le fichier désigné, avec la clé jointe selon la méthode CBC
+     * @param fis nom du fichier d'entrée
+     * @param fileName nom du fichier de sortie qui sera généré
+     * @param key clé de chiffrement
+     */
     public void cbcEncrypt(FileInputStream fis, String fileName, byte[] key){
         //Fonction pour dechiffrement avec une clé
         K = key;        //On affecte la clé de chiffrement
@@ -141,6 +158,12 @@ public class AES {
         }
     }
 
+    /**
+     * Permet de déchiffer le fichier désigné, avec le clé jointe selon la méthode CBD
+     * @param fis nom du fichier chiffré d'entrée
+     * @param fileName nom du fichier de sortie qui sera généré
+     * @param key clé de déchiffrement
+     */
     public void cbcDecrypt(FileInputStream fis, String fileName, byte[] key){
 
         //Fonction pour dechiffrement avec une clé
@@ -181,6 +204,9 @@ public class AES {
         }
     }
 
+    /**
+     * Génère un vecteur d'initialisation de façon aléatoire
+     */
     private void randomIV(){
         //Generate a random number between 0 and 255
         //in byte: 0x00 ... 0xFF
@@ -189,6 +215,9 @@ public class AES {
             IV[index] = (byte)randomGenerator.nextInt(256);
     }
 
+    /**
+     * Fonction subByte appliquée au bloc courrant
+     */
     private void subBytes(){
         int tmp;
         for(int index = 0; index < 16; ++index) {
@@ -201,6 +230,9 @@ public class AES {
         }
     }
 
+    /**
+     * Fonction shiftRows appliquée au bloc courrant
+     */
     private void shiftRows(){
         byte[] state2 = new byte[16];
         for(int i = 0; i < 16; ++i)
@@ -337,6 +369,13 @@ public class AES {
         return p;
     }
 
+    /**
+     * Fonction de génération dun fichier bourré pour préparer le chiffrement. Bourrage selon
+     * la methode pkcs5
+     * @param fis fichier d'entrée
+     * @param nameOutput nom du fichier de sortie
+     * @return fichier généré
+     */
     private FileInputStream bourrage(FileInputStream fis, String nameOutput){
 
         try {
@@ -362,6 +401,10 @@ public class AES {
         return null;
     }
 
+    /**
+     * Renvoie la matrice state courrante
+     * @return la matrice state courrante
+     */
     public byte[] getState(){
         return state;
     }
@@ -442,6 +485,11 @@ public class AES {
         W = w1;
     }
 
+    /**
+     * Affichage sous forme hexadécimal d'une suite d'octets
+     * @param donnees
+     * @return chaine hexa
+     */
     public static String toHex(byte[] donnees) {
         return "0x" + javax.xml.bind.DatatypeConverter.printHexBinary(donnees);
     }
