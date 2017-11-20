@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -175,12 +176,12 @@ public class AES {
             FileOutputStream fos = new FileOutputStream(new File(fileName));
 
             byte[] buffer = new byte[16];
-            int nbOctetsLus = fis.read(buffer);
 
             //recuperation du VI dans le fichier chiffrer
+            fis.read(buffer);
             System.arraycopy(buffer, 0, IV, 0, buffer.length);
 
-            nbOctetsLus = fis.read(buffer);
+            int nbOctetsLus = fis.read(buffer);
 
             while(nbOctetsLus != -1){
 
@@ -192,8 +193,17 @@ public class AES {
                 for(int i = 0; i < state.length; ++i)
                     state[i] = (byte)(IV[i] ^ state[i]);
 
-                writer(fos, state);
+                /*
+                 * On applique un traitement spécial pour le dernier bloc
+                 * Pour prendre en compte un eventuel padding à supprimer
+                 */
+                if(fis.available() <= 8){
+                    deleteBourage(fos);
+                }else{
+                    writer(fos, state);
+                }
                 System.arraycopy(buffer, 0, IV, 0, buffer.length);
+
                 nbOctetsLus = fis.read(buffer);
             }
 
@@ -201,6 +211,27 @@ public class AES {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void deleteBourage(FileOutputStream fos) {
+        byte lastByte = state[15];
+        int nbByteAdd = (int)lastByte;
+        boolean flag = true;
+
+        for(int i = 15; i != (16 - nbByteAdd - 1); --i){
+            if(state[i] != lastByte){
+                flag = false;
+                return;
+            }
+        }
+
+        if(flag){
+            //System.arraycopy(state, 0, state, 0, (16 - nbByteAdd-1));
+            byte[] tab = Arrays.copyOfRange(state, 0, (16-nbByteAdd));
+            writer(fos, tab);
+        }else{
+            writer(fos, state);
         }
     }
 
