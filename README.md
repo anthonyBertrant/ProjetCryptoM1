@@ -1,4 +1,4 @@
-image::https://travis-ci.com/anthonyBertrant/ProjetCryptoM1.svg?token=1PZcKAncrkHxFsUpsZGg&branch=dev
+image::https://travis-ci.com/anthonyBertrant/ProjetCryptoM1.svg?token=1PZcKAncrkHxFsUpsZGg&branch=dev[Build Status]
 
 = Projet AES
 
